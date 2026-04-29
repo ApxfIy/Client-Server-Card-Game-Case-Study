@@ -61,11 +61,15 @@ namespace WarGame.Client.Views
             }
 
             // Reshuffle captured → hand when the server reshuffled (instant, no animation)
+            var reshuffleAnimation = DOTween.Sequence();
+
             if (response.PlayerHandReshuffled)
-                AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand);
+                reshuffleAnimation.Join(AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand));
 
             if (response.OpponentHandReshuffled)
-                AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand);
+                reshuffleAnimation.Join(AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand));
+
+            await reshuffleAnimation.ToUniTask();
 
             // Face-down war cards (3 per side when continuing a war round)
             if (response.PlayerWarCardsPlayed > 0)
@@ -131,16 +135,20 @@ namespace WarGame.Client.Views
         }
 
         // Instantly moves all cards from one container to another (for captured → hand reshuffle)
-        private void AnimateReshuffle(CardsContainerView from, CardsContainerView to)
+        private Sequence AnimateReshuffle(CardsContainerView from, CardsContainerView to)
         {
+            var sequence = DOTween.Sequence();
             var cards = from.TakeAllCards();
             cards.Shuffle();
 
             foreach (var card in cards)
             {
                 card.Initialize(null, false);
-                to.AddCardImmediate(card);
+                // TODO move animation time somewhere
+                sequence.Append(to.AddCard(card, 0.2f));
             }
+
+            return sequence;
         }
 
         private void FinishRound()
