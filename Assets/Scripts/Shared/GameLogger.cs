@@ -11,7 +11,14 @@ namespace WarGame.Shared
         private static readonly string ServerTag = $"<color={ServerColor}><b>[Server]</b></color>";
         private static readonly string ClientTag = $"<color={ClientColor}><b>[Client]</b></color>";
 
-        public static void Server(string message) => Debug.Log($"{ServerTag} {message}");
-        public static void Client(string message) => Debug.Log($"{ClientTag} {message}");
+        public static void Server(string message)
+        {
+            Debug.Log($"{ServerTag} {message}");
+        }
+
+        public static void Client(string message)
+        {
+            Debug.Log($"{ClientTag} {message}");
+        }
     }
 }

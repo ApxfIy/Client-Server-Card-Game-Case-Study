@@ -7,9 +7,10 @@ namespace WarGame.Client.Views
 {
     public class GameEntryPoint : MonoBehaviour
     {
-        [SerializeField] private GameBoard      board;
+        [SerializeField] private GameBoard board;
+
         // Can use SerializeReference and select IDealStrategy, but we need to write custom inspector for that
-        [SerializeField] private DebugPreset   debugPreset;
+        [SerializeField] private DebugPreset debugPreset;
 
         private GameController _gameController;
 
@@ -20,8 +21,8 @@ namespace WarGame.Client.Views
 
             IDealStrategy strategy = debugPreset switch
             {
-                DebugPreset.PlayerWinsRound1     => new OneRoundWinStrategy(playerWins: true),
-                DebugPreset.OpponentWinsRound1   => new OneRoundWinStrategy(playerWins: false),
+                DebugPreset.PlayerWinsRound1     => new OneRoundWinStrategy(true),
+                DebugPreset.OpponentWinsRound1   => new OneRoundWinStrategy(false),
                 DebugPreset.TripleWar            => new TripleWarStrategy(),
                 DebugPreset.WarInsufficientCards => new WarInsufficientCardsStrategy(),
                 _                                => new RandomDealStrategy()
@@ -29,10 +30,10 @@ namespace WarGame.Client.Views
 
             var server = new FakeWarServer(strategy);
             var client = new GameClient(server);
-            
+
             if (debugPreset != DebugPreset.None)
                 server.DeleteSave();
-                
+
             var state = await client.StartGameAsync();
 
             if (state.Status != ResponseStatus.Success)
@@ -44,14 +45,10 @@ namespace WarGame.Client.Views
             board.Deck.Initialize(state.TotalCards);
 
             if (state.IsRestoredGame)
-            {
                 board.RestoreFromState(state);
-            }
             else
-            {
                 await board.DealCardsToPlayers(state.PlayerHandCount, state.OpponentHandCount)
                            .ToUniTask();
-            }
 
             _gameController = new GameController(board, client, inputManager);
             _gameController.Initialize();

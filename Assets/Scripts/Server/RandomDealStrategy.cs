@@ -9,19 +9,21 @@ namespace WarGame.Server
         public void Deal(List<CardRank> playerHand, List<CardRank> opponentHand)
         {
             var deck = new List<CardRank>();
+
             foreach (CardRank rank in Enum.GetValues(typeof(CardRank)))
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                     deck.Add(rank);
 
             deck.Shuffle();
 
-            for (int i = 0; i < deck.Count; i++)
-            {
+            for (var i = 0; i < deck.Count; i++)
                 if (i % 2 == 0) playerHand.Add(deck[i]);
-                else             opponentHand.Add(deck[i]);
-            }
+                else opponentHand.Add(deck[i]);
         }
 
-        public void Shuffle(List<CardRank> list, int reshuffleNumber) => list.Shuffle();
+        public void Shuffle(List<CardRank> list, int reshuffleNumber)
+        {
+            list.Shuffle();
+        }
     }
 }

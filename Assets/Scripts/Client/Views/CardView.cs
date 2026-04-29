@@ -23,6 +23,11 @@ namespace WarGame.Client.Views
         public CardRank? Rank { get; private set; }
         public bool IsFaceUp { get; private set; }
 
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            OnClick?.Invoke(this);
+        }
+
         public void Initialize(CardRank? rank, bool faceUp)
         {
             Rank = rank;
@@ -44,35 +49,30 @@ namespace WarGame.Client.Views
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                   .Append(root.DOScaleX(0f, animationDuration))
-                   .AppendCallback(() => ApplyVisuals(true, Rank))
-                   .Append(root.DOScaleX(1f, animationDuration))
-                   .OnStart(() => IsFaceUp = true);
+                          .Append(root.DOScaleX(0f, animationDuration))
+                          .AppendCallback(() => ApplyVisuals(true, Rank))
+                          .Append(root.DOScaleX(1f, animationDuration))
+                          .OnStart(() => IsFaceUp = true);
         }
 
         [ContextMenu("FaceDown")]
         public Tween FaceDown()
         {
-            if (IsFaceUp == false)
+            if (!IsFaceUp)
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                   .Append(root.DOScaleX(0f, animationDuration))
-                   .AppendCallback(() => ApplyVisuals(false, Rank))
-                   .Append(root.DOScaleX(1f, animationDuration))
-                   .OnStart(() => IsFaceUp = false);
+                          .Append(root.DOScaleX(0f, animationDuration))
+                          .AppendCallback(() => ApplyVisuals(false, Rank))
+                          .Append(root.DOScaleX(1f, animationDuration))
+                          .OnStart(() => IsFaceUp = false);
         }
 
         private void ApplyVisuals(bool faceUp, CardRank? rank)
         {
             rankText.enabled = faceUp && rank.HasValue;
-            rankText.text    = rank.HasValue ? rank.Value.RankToString() : string.Empty;
+            rankText.text = rank.HasValue ? rank.Value.RankToString() : string.Empty;
             background.color = faceUp ? faceUpColor : faceDownColor;
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            OnClick?.Invoke(this);
         }
     }
 }

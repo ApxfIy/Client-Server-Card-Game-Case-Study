@@ -17,7 +17,7 @@ namespace WarGame.Client.Views
         // Creates count face-down cards with unknown rank (rank is set by the server on reveal)
         public void Initialize(int count)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var card = Instantiate(cardPrefab, cardParent);
                 card.Initialize(null, false);

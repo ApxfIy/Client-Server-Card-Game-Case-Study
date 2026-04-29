@@ -23,18 +23,18 @@ namespace WarGame.Server
         {
             playerHand.AddRange(new[]
             {
-                CardRank.Ace,                                       // W3 comparison (drawn 13th)
-                CardRank.Three, CardRank.Three, CardRank.Three,     // W3 FD
-                CardRank.Seven,                                     // W2 comparison
-                CardRank.Three, CardRank.Three, CardRank.Three,     // W2 FD
-                CardRank.Six,                                       // W1 comparison
-                CardRank.Three, CardRank.Three, CardRank.Three,     // W1 FD
-                CardRank.Five                                       // R1 comparison (drawn 1st)
+                CardRank.Ace,                                   // W3 comparison (drawn 13th)
+                CardRank.Three, CardRank.Three, CardRank.Three, // W3 FD
+                CardRank.Seven,                                 // W2 comparison
+                CardRank.Three, CardRank.Three, CardRank.Three, // W2 FD
+                CardRank.Six,                                   // W1 comparison
+                CardRank.Three, CardRank.Three, CardRank.Three, // W1 FD
+                CardRank.Five                                   // R1 comparison (drawn 1st)
             });
 
             opponentHand.AddRange(new[]
             {
-                CardRank.Two,                                       // W3 comparison — loses to Ace
+                CardRank.Two, // W3 comparison — loses to Ace
                 CardRank.Three, CardRank.Three, CardRank.Three,
                 CardRank.Seven,
                 CardRank.Three, CardRank.Three, CardRank.Three,
@@ -44,6 +44,8 @@ namespace WarGame.Server
             });
         }
 
-        public void Shuffle(List<CardRank> list, int reshuffleNumber) { }
+        public void Shuffle(List<CardRank> list, int reshuffleNumber)
+        {
+        }
     }
 }

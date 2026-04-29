@@ -23,7 +23,7 @@ namespace WarGame.Server
             // Player: 20 filler Threes at the bottom, then the scripted sequence at the top.
             // Drawn order (TakeTop = last element first):
             //   Ace(R1), Five(R2), Three×3(W1 FD), Seven(W1 compare), Three×20(unused filler)
-            for (int i = 0; i < 20; i++) 
+            for (var i = 0; i < 20; i++)
                 playerHand.Add(CardRank.Three);
 
             playerHand.AddRange(new[]
@@ -38,14 +38,16 @@ namespace WarGame.Server
             // Drawn order: Two(R1), Five(R2), Four×3(W1 FD), Seven(W1 compare), Three(leftover)
             opponentHand.AddRange(new[]
             {
-                CardRank.Three,                                 // leftover — 1 card after W1
-                CardRank.Seven,                                 // W1 comparison (drawn 6th)
-                CardRank.Four, CardRank.Four, CardRank.Four,   // W1 FD (drawn 3rd–5th)
-                CardRank.Five,                                  // R2 comparison (drawn 2nd)
-                CardRank.Two                                    // R1 comparison (drawn 1st)
+                CardRank.Three,                              // leftover — 1 card after W1
+                CardRank.Seven,                              // W1 comparison (drawn 6th)
+                CardRank.Four, CardRank.Four, CardRank.Four, // W1 FD (drawn 3rd–5th)
+                CardRank.Five,                               // R2 comparison (drawn 2nd)
+                CardRank.Two                                 // R1 comparison (drawn 1st)
             });
         }
 
-        public void Shuffle(List<CardRank> list, int reshuffleNumber) { }
+        public void Shuffle(List<CardRank> list, int reshuffleNumber)
+        {
+        }
     }
 }

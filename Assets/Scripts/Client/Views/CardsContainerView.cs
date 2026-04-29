@@ -10,12 +10,12 @@ namespace WarGame.Client.Views
     {
         [SerializeField] private RectTransform container;
 
-        public event Action<CardView, CardsContainerView> OnClick;
-
         public int Count => _cards.Count;
         public IReadOnlyList<CardView> Cards => _cards;
 
         private readonly List<CardView> _cards = new();
+
+        public event Action<CardView, CardsContainerView> OnClick;
 
         public Sequence AddCard(CardView cardView, float duration)
         {
@@ -46,7 +46,8 @@ namespace WarGame.Client.Views
         public CardView TakeTopCard()
         {
             if (_cards.Count == 0) return null;
-            var card = _cards[_cards.Count - 1];
+
+            var card = _cards[^1];
             RemoveCard(card);
             return card;
         }
@@ -55,8 +56,10 @@ namespace WarGame.Client.Views
         {
             var all = _cards.ToList();
             _cards.Clear();
+
             foreach (var card in all)
                 card.OnClick -= OnCardClick;
+
             return all;
         }
 

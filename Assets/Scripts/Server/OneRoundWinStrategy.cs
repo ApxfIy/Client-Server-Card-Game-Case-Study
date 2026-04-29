@@ -11,16 +11,21 @@ namespace WarGame.Server
         private const int HandCardCount = 4;
         private readonly bool _playerWins;
 
-        public OneRoundWinStrategy(bool playerWins) => _playerWins = playerWins;
+        public OneRoundWinStrategy(bool playerWins)
+        {
+            _playerWins = playerWins;
+        }
 
         public void Deal(List<CardRank> playerHand, List<CardRank> opponentHand)
         {
             var strongHand = new List<CardRank>();
-            for (var i = 0; i < HandCardCount; i++) 
+
+            for (var i = 0; i < HandCardCount; i++)
                 strongHand.Add(CardRank.Ace);
-            
+
             var weakHand = new List<CardRank>();
-            for (var i = 0; i < HandCardCount; i++) 
+
+            for (var i = 0; i < HandCardCount; i++)
                 weakHand.Add(CardRank.Two);
 
             if (_playerWins)
@@ -35,6 +40,8 @@ namespace WarGame.Server
             }
         }
 
-        public void Shuffle(List<CardRank> list, int reshuffleNumber) { }
+        public void Shuffle(List<CardRank> list, int reshuffleNumber)
+        {
+        }
     }
 }

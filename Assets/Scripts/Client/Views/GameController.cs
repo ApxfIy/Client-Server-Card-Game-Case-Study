@@ -17,8 +17,8 @@ namespace WarGame.Client.Views
 
         public GameController(GameBoard board, GameClient client, InputManager inputManager)
         {
-            _board        = board;
-            _client       = client;
+            _board = board;
+            _client = client;
             _inputManager = inputManager;
         }
 
@@ -35,6 +35,7 @@ namespace WarGame.Client.Views
         private void OnAnyInput()
         {
             if (_isProcessingRound) return;
+
             PlayRoundAsync().Forget();
         }
 
@@ -60,17 +61,23 @@ namespace WarGame.Client.Views
             }
 
             // Reshuffle captured → hand when the server reshuffled (instant, no animation)
-            if (response.PlayerHandReshuffled)   AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand);
-            if (response.OpponentHandReshuffled) AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand);
+            if (response.PlayerHandReshuffled)
+                AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand);
+
+            if (response.OpponentHandReshuffled)
+                AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand);
 
             // Face-down war cards (3 per side when continuing a war round)
             if (response.PlayerWarCardsPlayed > 0)
             {
                 var warSeq = DOTween.Sequence();
-                for (int i = 0; i < response.PlayerWarCardsPlayed; i++)
+
+                for (var i = 0; i < response.PlayerWarCardsPlayed; i++)
                     warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.PlayerHand.TakeTopCard()));
-                for (int i = 0; i < response.OpponentWarCardsPlayed; i++)
+
+                for (var i = 0; i < response.OpponentWarCardsPlayed; i++)
                     warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.OpponentHand.TakeTopCard()));
+
                 await warSeq.ToUniTask();
             }
 
@@ -79,15 +86,15 @@ namespace WarGame.Client.Views
             var oCard = _board.OpponentHand.TakeTopCard();
 
             await DOTween.Sequence()
-                .Join(_board.GameBattleArea.AddCardToPlayerSlot(pCard))
-                .Join(_board.GameBattleArea.AddCardToOpponentSlot(oCard))
-                .ToUniTask();
+                         .Join(_board.GameBattleArea.AddCardToPlayerSlot(pCard))
+                         .Join(_board.GameBattleArea.AddCardToOpponentSlot(oCard))
+                         .ToUniTask();
 
             // Reveal ranks provided by the server
             await DOTween.Sequence()
-                .Join(pCard.Reveal(response.PlayerCard))
-                .Join(oCard.Reveal(response.OpponentCard))
-                .ToUniTask();
+                         .Join(pCard.Reveal(response.PlayerCard))
+                         .Join(oCard.Reveal(response.OpponentCard))
+                         .ToUniTask();
 
             await UniTask.Delay(500);
 
@@ -105,11 +112,13 @@ namespace WarGame.Client.Views
 
             var tableCards = _board.GameBattleArea.TakeAllCards();
             var collectSeq = DOTween.Sequence();
+
             foreach (var card in tableCards)
             {
                 card.Initialize(null, false);
                 collectSeq.Join(winnerPile.AddCard(card, 0.3f));
             }
+
             await collectSeq.ToUniTask();
 
             if (response.IsGameOver)
@@ -126,6 +135,7 @@ namespace WarGame.Client.Views
         {
             var cards = from.TakeAllCards();
             cards.Shuffle();
+
             foreach (var card in cards)
             {
                 card.Initialize(null, false);

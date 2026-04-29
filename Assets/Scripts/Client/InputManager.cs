@@ -10,7 +10,7 @@ namespace WarGame.Client
 
         private bool _isEnabled;
 
-        public void EnableInput()  => _isEnabled = true;
+        public void EnableInput() => _isEnabled = true;
         public void DisableInput() => _isEnabled = false;
 
         private void Update()
