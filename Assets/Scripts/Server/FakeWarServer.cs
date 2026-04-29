@@ -21,6 +21,12 @@ namespace WarGame.Server
 
         private bool _isWarActive;
         private bool _isGameOver;
+        private int  _reshuffleCount;
+
+        private readonly IDealStrategy _dealStrategy;
+
+        public FakeWarServer(IDealStrategy strategy = null) =>
+            _dealStrategy = strategy ?? new RandomDealStrategy();
 
         private const float MinDelayMs         = 150f;
         private const float MaxDelayMs         = 500f;
@@ -243,17 +249,26 @@ namespace WarGame.Server
             };
         }
 
+        public void DeleteSave()
+        {
+            try
+            {
+                if (File.Exists(SavePath))
+                {
+                    File.Delete(SavePath);
+                    GameLogger.Server("Deleted save file");
+                }
+            }
+            catch (Exception e)
+            {
+                 /* best-effort */
+            }
+        }
+
         // ── Game init ─────────────────────────────────────────────────────────
 
         private void InitNewGame()
         {
-            var deck = new List<CardRank>();
-            foreach (CardRank rank in Enum.GetValues(typeof(CardRank)))
-                for (int i = 0; i < 4; i++)
-                    deck.Add(rank);
-
-            deck.Shuffle();
-
             _playerHand.Clear();
             _opponentHand.Clear();
             _playerCaptured.Clear();
@@ -261,14 +276,11 @@ namespace WarGame.Server
             _warFaceDown.Clear();
             _playerSlot.Clear();
             _opponentSlot.Clear();
-            _isWarActive = false;
-            _isGameOver  = false;
+            _isWarActive    = false;
+            _isGameOver     = false;
+            _reshuffleCount = 0;
 
-            for (int i = 0; i < deck.Count; i++)
-            {
-                if (i % 2 == 0) _playerHand.Add(deck[i]);
-                else            _opponentHand.Add(deck[i]);
-            }
+            _dealStrategy.Deal(_playerHand, _opponentHand);
         }
 
         private void RestoreState(SavedGameState s)
@@ -296,12 +308,12 @@ namespace WarGame.Server
 
         // Reshuffles captured into hand when hand has fewer cards than needed.
         // Returns true if a reshuffle occurred.
-        private static bool EnsureCards(List<CardRank> hand, List<CardRank> captured, int needed)
+        private bool EnsureCards(List<CardRank> hand, List<CardRank> captured, int needed)
         {
             if (hand.Count >= needed || captured.Count == 0) return false;
             hand.AddRange(captured);
-            hand.Shuffle();
             captured.Clear();
+            _dealStrategy.Shuffle(hand, ++_reshuffleCount);
             return true;
         }
 
@@ -356,12 +368,6 @@ namespace WarGame.Server
                 return state != null;
             }
             catch { state = null; return false; }
-        }
-
-        private static void DeleteSave()
-        {
-            try { File.Delete(SavePath); }
-            catch { /* best-effort */ }
         }
 
         // ── Network simulation ────────────────────────────────────────────────

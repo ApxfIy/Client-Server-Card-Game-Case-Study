@@ -7,7 +7,9 @@ namespace WarGame.Client.Views
 {
     public class GameEntryPoint : MonoBehaviour
     {
-        [SerializeField] private GameBoard board;
+        [SerializeField] private GameBoard      board;
+        // Can use SerializeReference and select IDealStrategy, but we need to write custom inspector for that
+        [SerializeField] private DebugPreset   debugPreset;
 
         private GameController _gameController;
 
@@ -16,8 +18,21 @@ namespace WarGame.Client.Views
             var inputManager = gameObject.AddComponent<InputManager>();
             inputManager.DisableInput();
 
-            var server = new FakeWarServer();
+            IDealStrategy strategy = debugPreset switch
+            {
+                DebugPreset.PlayerWinsRound1     => new OneRoundWinStrategy(playerWins: true),
+                DebugPreset.OpponentWinsRound1   => new OneRoundWinStrategy(playerWins: false),
+                DebugPreset.TripleWar            => new TripleWarStrategy(),
+                DebugPreset.WarInsufficientCards => new WarInsufficientCardsStrategy(),
+                _                                => new RandomDealStrategy()
+            };
+
+            var server = new FakeWarServer(strategy);
             var client = new GameClient(server);
+            
+            if (debugPreset != DebugPreset.None)
+                server.DeleteSave();
+                
             var state = await client.StartGameAsync();
 
             if (state.Status != ResponseStatus.Success)
