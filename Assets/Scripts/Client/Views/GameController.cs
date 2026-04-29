@@ -73,47 +73,9 @@ namespace WarGame.Client.Views
                 return;
             }
 
-            // Reshuffle captured → hand when the server reshuffled (instant, no animation)
-            var reshuffleAnimation = DOTween.Sequence();
-
-            if (response.PlayerHandReshuffled)
-                reshuffleAnimation.Join(AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand));
-
-            if (response.OpponentHandReshuffled)
-                reshuffleAnimation.Join(AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand));
-
-            await reshuffleAnimation.ToUniTask();
-
-            // Face-down war cards (3 per side when continuing a war round)
-            if (response.PlayerWarCardsPlayed > 0)
-            {
-                var warSeq = DOTween.Sequence();
-
-                for (var i = 0; i < response.PlayerWarCardsPlayed; i++)
-                    warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.PlayerHand.TakeTopCard()));
-
-                for (var i = 0; i < response.OpponentWarCardsPlayed; i++)
-                    warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.OpponentHand.TakeTopCard()));
-
-                await warSeq.ToUniTask();
-            }
-
-            // Comparison cards slide to their slots
-            var pCard = _board.PlayerHand.TakeTopCard();
-            var oCard = _board.OpponentHand.TakeTopCard();
-
-            await DOTween.Sequence()
-                         .Join(_board.GameBattleArea.AddCardToPlayerSlot(pCard))
-                         .Join(_board.GameBattleArea.AddCardToOpponentSlot(oCard))
-                         .ToUniTask();
-
-            // Reveal ranks provided by the server
-            await DOTween.Sequence()
-                         .Join(pCard.Reveal(response.PlayerCard))
-                         .Join(oCard.Reveal(response.OpponentCard))
-                         .ToUniTask();
-
-            await UniTask.Delay(_animationConfig.RevealResultDelayMs);
+            await Reshuffle(response);
+            await MoveCardsToWarPosition(response);
+            await CompareCards(response);
 
             // Tie: server will handle war on the next round
             if (response.RoundResult == CompareResult.Tie)
@@ -122,7 +84,66 @@ namespace WarGame.Client.Views
                 return;
             }
 
-            // Collect all table cards to the winner's pile
+            await CollectCards(response);
+
+            if (response.IsGameOver)
+            {
+                EndGame(response.FinalResult);
+                return;
+            }
+
+            FinishRound();
+        }
+
+        private UniTask Reshuffle(PlayRoundResponse response)
+        {
+            var reshuffleAnimation = DOTween.Sequence();
+
+            if (response.PlayerHandReshuffled)
+                reshuffleAnimation.Join(AnimateReshuffle(_board.PlayerCapturedCards, _board.PlayerHand));
+
+            if (response.OpponentHandReshuffled)
+                reshuffleAnimation.Join(AnimateReshuffle(_board.OpponentCapturedCards, _board.OpponentHand));
+
+            return reshuffleAnimation.ToUniTask();
+        }
+
+        private UniTask MoveCardsToWarPosition(PlayRoundResponse response)
+        {
+            if (response.PlayerWarCardsPlayed <= 0)
+                return UniTask.CompletedTask;
+
+            var warSeq = DOTween.Sequence();
+
+            for (var i = 0; i < response.PlayerWarCardsPlayed; i++)
+                warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.PlayerHand.TakeTopCard()));
+
+            for (var i = 0; i < response.OpponentWarCardsPlayed; i++)
+                warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.OpponentHand.TakeTopCard()));
+
+            return warSeq.ToUniTask();
+        }
+
+        private async UniTask CompareCards(PlayRoundResponse response)
+        {
+            var pCard = _board.PlayerHand.TakeTopCard();
+            var oCard = _board.OpponentHand.TakeTopCard();
+
+            await DOTween.Sequence()
+                         .Join(_board.GameBattleArea.AddCardToPlayerSlot(pCard))
+                         .Join(_board.GameBattleArea.AddCardToOpponentSlot(oCard))
+                         .ToUniTask();
+
+            await DOTween.Sequence()
+                         .Join(pCard.Reveal(response.PlayerCard))
+                         .Join(oCard.Reveal(response.OpponentCard))
+                         .ToUniTask();
+
+            await UniTask.Delay(_animationConfig.RevealResultDelayMs);
+        }
+
+        private UniTask CollectCards(PlayRoundResponse response)
+        {
             var winnerPile = response.RoundResult == CompareResult.PlayerWins
                 ? _board.PlayerCapturedCards
                 : _board.OpponentCapturedCards;
@@ -136,15 +157,7 @@ namespace WarGame.Client.Views
                 collectSeq.Join(winnerPile.AddCard(card, _animationConfig.CollectCardsDuration));
             }
 
-            await collectSeq.ToUniTask();
-
-            if (response.IsGameOver)
-            {
-                EndGame(response.FinalResult);
-                return;
-            }
-
-            FinishRound();
+            return collectSeq.ToUniTask();
         }
 
         // Instantly moves all cards from one container to another (for captured → hand reshuffle)
