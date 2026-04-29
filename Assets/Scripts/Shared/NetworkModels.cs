@@ -11,6 +11,15 @@ namespace WarGame.Shared
         public int PlayerCapturedCount;
         public int OpponentCapturedCount;
 
+        public int TotalCards =>
+            PlayerHandCount
+            + OpponentHandCount
+            + PlayerCapturedCount
+            + OpponentCapturedCount
+            + WarFaceDownCount
+            + (PlayerSlotRanks?.Length ?? 0)
+            + (OpponentSlotRanks?.Length ?? 0);
+
         // War state (meaningful when IsWarActive = true)
         public bool IsWarActive;
         public int WarFaceDownCount;

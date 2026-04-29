@@ -41,15 +41,7 @@ namespace WarGame.Client.Views
                 return;
             }
 
-            int totalCards = state.PlayerHandCount
-                           + state.OpponentHandCount
-                           + state.PlayerCapturedCount
-                           + state.OpponentCapturedCount
-                           + state.WarFaceDownCount
-                           + (state.PlayerSlotRanks?.Length ?? 0)
-                           + (state.OpponentSlotRanks?.Length ?? 0);
-
-            board.Deck.Initialize(totalCards);
+            board.Deck.Initialize(state.TotalCards);
 
             if (state.IsRestoredGame)
             {
