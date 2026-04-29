@@ -13,6 +13,9 @@ namespace WarGame.Client.Views
 
         private async void Awake()
         {
+            var inputManager = gameObject.AddComponent<InputManager>();
+            inputManager.DisableInput();
+
             var server = new FakeWarServer();
             var client = new GameClient(server);
             var state = await client.StartGameAsync();
@@ -23,7 +26,6 @@ namespace WarGame.Client.Views
                 return;
             }
 
-            // Total is always 52: hands + captured piles + war pot + revealed slot cards
             int totalCards = state.PlayerHandCount
                            + state.OpponentHandCount
                            + state.PlayerCapturedCount
@@ -44,8 +46,9 @@ namespace WarGame.Client.Views
                            .ToUniTask();
             }
 
-            _gameController = new GameController(board, client);
+            _gameController = new GameController(board, client, inputManager);
             _gameController.Initialize();
+            inputManager.EnableInput();
         }
 
         private void OnDestroy()

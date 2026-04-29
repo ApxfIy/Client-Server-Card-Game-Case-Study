@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -12,27 +11,28 @@ namespace WarGame.Client.Views
     {
         private readonly GameBoard _board;
         private readonly GameClient _client;
-        private readonly InputManager _inputManager = new();
+        private readonly InputManager _inputManager;
 
         private bool _isProcessingRound;
 
-        public GameController(GameBoard board, GameClient client)
+        public GameController(GameBoard board, GameClient client, InputManager inputManager)
         {
-            _board  = board;
-            _client = client;
+            _board        = board;
+            _client       = client;
+            _inputManager = inputManager;
         }
 
         public void Initialize()
         {
-            _board.PlayerHand.OnClick += OnPlayerHandClick;
+            _inputManager.OnInput += OnAnyInput;
         }
 
         public void Dispose()
         {
-            _board.PlayerHand.OnClick -= OnPlayerHandClick;
+            _inputManager.OnInput -= OnAnyInput;
         }
 
-        private void OnPlayerHandClick(CardView view, CardsContainerView hand)
+        private void OnAnyInput()
         {
             if (_isProcessingRound) return;
             PlayRoundAsync().Forget();
