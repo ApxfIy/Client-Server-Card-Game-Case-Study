@@ -7,6 +7,7 @@ using WarGame.Shared;
 
 namespace WarGame.Server
 {
+    // TODO create FakeServerDatabase and move persistence logic there
     public class FakeWarServer
     {
         private List<CardRank> _playerHand       = new();
