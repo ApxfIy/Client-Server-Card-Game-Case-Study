@@ -625,7 +625,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 753157478}
-  debugPreset: 1
+  debugPreset: 0
 --- !u!4 &1191141609
 Transform:
   m_ObjectHideFlags: 0
