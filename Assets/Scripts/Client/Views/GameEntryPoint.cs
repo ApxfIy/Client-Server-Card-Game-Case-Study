@@ -32,7 +32,7 @@ namespace WarGame.Client.Views
             var client = new GameClient(server);
 
             if (debugPreset != DebugPreset.None)
-                server.DeleteSave();
+                FakeWarServer.DeleteSave();
 
             var state = await client.StartGameAsync();
 

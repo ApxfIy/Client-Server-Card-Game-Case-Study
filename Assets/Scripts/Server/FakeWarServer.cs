@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using WarGame.Shared;
 
@@ -262,7 +263,8 @@ namespace WarGame.Server
             };
         }
 
-        public void DeleteSave()
+        [MenuItem("Tools/Delete Save")]
+        public static void DeleteSave()
         {
             try
             {
