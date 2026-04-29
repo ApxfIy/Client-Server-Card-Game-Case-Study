@@ -8,6 +8,7 @@ namespace WarGame.Client.Views
     public class GameEntryPoint : MonoBehaviour
     {
         [SerializeField] private GameBoard board;
+        [SerializeField] private AnimationConfig animationConfig;
 
         // Can use SerializeReference and select IDealStrategy, but we need to write custom inspector for that
         [SerializeField] private DebugPreset debugPreset;
@@ -50,7 +51,7 @@ namespace WarGame.Client.Views
                 await board.DealCardsToPlayers(state.PlayerHandCount, state.OpponentHandCount)
                            .ToUniTask();
 
-            _gameController = new GameController(board, client, inputManager);
+            _gameController = new GameController(board, client, inputManager, animationConfig);
             _gameController.Initialize();
             inputManager.EnableInput();
         }

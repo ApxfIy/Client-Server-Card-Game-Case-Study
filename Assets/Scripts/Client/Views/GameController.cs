@@ -13,15 +13,17 @@ namespace WarGame.Client.Views
         private readonly GameBoard _board;
         private readonly GameClient _client;
         private readonly InputManager _inputManager;
+        private readonly AnimationConfig _animationConfig;
 
         private bool _isProcessingRound;
         private bool _isGameFinished;
 
-        public GameController(GameBoard board, GameClient client, InputManager inputManager)
+        public GameController(GameBoard board, GameClient client, InputManager inputManager, AnimationConfig animationConfig)
         {
             _board = board;
             _client = client;
             _inputManager = inputManager;
+            _animationConfig = animationConfig;
         }
 
         public void Initialize()
@@ -111,7 +113,7 @@ namespace WarGame.Client.Views
                          .Join(oCard.Reveal(response.OpponentCard))
                          .ToUniTask();
 
-            await UniTask.Delay(500);
+            await UniTask.Delay(_animationConfig.RevealResultDelayMs);
 
             // Tie: server will handle war on the next round
             if (response.RoundResult == CompareResult.Tie)
@@ -131,7 +133,7 @@ namespace WarGame.Client.Views
             foreach (var card in tableCards)
             {
                 card.Initialize(null, false);
-                collectSeq.Join(winnerPile.AddCard(card, 0.3f));
+                collectSeq.Join(winnerPile.AddCard(card, _animationConfig.CollectCardsDuration));
             }
 
             await collectSeq.ToUniTask();
@@ -155,8 +157,7 @@ namespace WarGame.Client.Views
             foreach (var card in cards)
             {
                 card.Initialize(null, false);
-                // TODO move animation time somewhere
-                sequence.Append(to.AddCard(card, 0.2f));
+                sequence.Append(to.AddCard(card, _animationConfig.ReshuffleDuration));
             }
 
             return sequence;

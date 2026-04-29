@@ -1,5 +1,6 @@
 using DG.Tweening;
 using UnityEngine;
+using WarGame.Client.Animation;
 using WarGame.Shared;
 
 namespace WarGame.Client.Views
@@ -12,7 +13,7 @@ namespace WarGame.Client.Views
         [SerializeField] private CardsContainerView playerCapturedCards;
         [SerializeField] private CardsContainerView opponentCapturedCards;
         [SerializeField] private BattleTableView gameBattleArea;
-        [SerializeField] private float dealCardAnimationDuration = 0.2f;
+        [SerializeField] private AnimationConfig animationConfig;
 
         public CardDeck Deck => deck;
         public CardsContainerView PlayerHand => playerHand;
@@ -95,7 +96,7 @@ namespace WarGame.Client.Views
             if (deck.IsEmpty)
                 return DOTween.Sequence();
 
-            return hand.AddCard(deck.GetCard(), dealCardAnimationDuration);
+            return hand.AddCard(deck.GetCard(), animationConfig.DealCardDuration);
         }
     }
 }

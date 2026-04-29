@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using WarGame.Client.Animation;
 using WarGame.Shared;
 
 namespace WarGame.Client.Views
@@ -15,7 +16,7 @@ namespace WarGame.Client.Views
         [SerializeField] private TextMeshProUGUI rankText;
         [SerializeField] private Color faceUpColor = Color.white;
         [SerializeField] private Color faceDownColor = new(0.18f, 0.36f, 0.72f);
-        [SerializeField] private float animationDuration = 0.2f;
+        [SerializeField] private AnimationConfig animationConfig;
 
         public event Action<CardView> OnClick;
 
@@ -49,9 +50,9 @@ namespace WarGame.Client.Views
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                          .Append(root.DOScaleX(0f, animationDuration))
+                          .Append(root.DOScaleX(0f, animationConfig.CardFlipDuration))
                           .AppendCallback(() => ApplyVisuals(true, Rank))
-                          .Append(root.DOScaleX(1f, animationDuration))
+                          .Append(root.DOScaleX(1f, animationConfig.CardFlipDuration))
                           .OnStart(() => IsFaceUp = true);
         }
 
@@ -62,9 +63,9 @@ namespace WarGame.Client.Views
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                          .Append(root.DOScaleX(0f, animationDuration))
+                          .Append(root.DOScaleX(0f, animationConfig.CardFlipDuration))
                           .AppendCallback(() => ApplyVisuals(false, Rank))
-                          .Append(root.DOScaleX(1f, animationDuration))
+                          .Append(root.DOScaleX(1f, animationConfig.CardFlipDuration))
                           .OnStart(() => IsFaceUp = false);
         }
 

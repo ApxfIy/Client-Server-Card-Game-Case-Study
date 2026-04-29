@@ -173,7 +173,7 @@ MonoBehaviour:
   playerSlot: {fileID: 1424086936}
   opponentSlot: {fileID: 1145503250}
   warCardsContainer: {fileID: 1815334978}
-  animationDuration: 0.5
+  animationConfig: {fileID: 11400000, guid: adbb9da155772f642ac6ab7dea32f87c, type: 2}
 --- !u!1 &224901976
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,7 +369,7 @@ MonoBehaviour:
   playerCapturedCards: {fileID: 1835092852}
   opponentCapturedCards: {fileID: 1517765752}
   gameBattleArea: {fileID: 58752174}
-  dealCardAnimationDuration: 0.05
+  animationConfig: {fileID: 11400000, guid: adbb9da155772f642ac6ab7dea32f87c, type: 2}
 --- !u!224 &753157479
 RectTransform:
   m_ObjectHideFlags: 0
@@ -625,6 +625,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 753157478}
+  animationConfig: {fileID: 11400000, guid: adbb9da155772f642ac6ab7dea32f87c, type: 2}
   debugPreset: 0
 --- !u!4 &1191141609
 Transform:
