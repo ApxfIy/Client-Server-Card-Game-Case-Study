@@ -13,6 +13,7 @@ A 2D implementation of the classic **War** card game for two players, built with
 - **Animated card movements** — all card transitions use DOTween sequences exposed as UniTask for clean async/await orchestration
 - **War animation** — face-down war cards are dealt sequentially before the final face-up reveal
 - **Reshuffle animation** — when a player's hand runs out, captured cards are visually reshuffled back into their deck
+- **Adaptive layout** — the UI rearranges automatically when the aspect ratio crosses the landscape/portrait threshold; elements are re-parented at runtime with no scene reload required
 - **Debug presets** — inspector-selectable scenarios for testing specific game states without replaying the whole game
 - **Color-coded logging** — server logs (orange) and client logs (blue) are visually distinguished in the Unity console
 
@@ -31,6 +32,7 @@ Assets/Scripts/
 │   │   ├── GameEntryPoint.cs       — MonoBehaviour bootstrap: wires all services, starts game
 │   │   ├── GameController.cs       — Gameplay loop: input → server call → animate result
 │   │   ├── GameBoard.cs            — Visual root: owns all card containers, orchestrates deals
+│   │   ├── LayoutSwitcher.cs       — Re-parents UI elements on portrait↔landscape change
 │   │   ├── BattleTableView.cs      — Battle area: player slot, opponent slot, war pot
 │   │   ├── CardsContainerView.cs   — Generic animated card pile (hand, captured, slot, war)
 │   │   ├── CardView.cs             — Single card: face-up/face-down flip, rank display, click
@@ -85,6 +87,24 @@ Player tap
 ---
 
 ## Configuring the Game via Unity Inspector
+
+### LayoutSwitcher
+
+Monitors the screen aspect ratio every frame and re-parents a set of UI elements when the device crosses the portrait↔landscape threshold. The switch fires immediately at runtime — no scene reload required.
+
+| Field | Type | Description |
+|---|---|---|
+| `Entries` | `LayoutEntry[]` | List of UI elements to reposition on orientation change |
+
+Each `LayoutEntry` contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `Target` | `Transform` | The UI element to move |
+| `Vertical Parent` | `Transform` | Parent assigned in portrait mode (`width ≤ height`) |
+| `Horizontal Parent` | `Transform` | Parent assigned in landscape mode (`width > height`) |
+
+---
 
 ### GameEntryPoint (scene root object)
 
