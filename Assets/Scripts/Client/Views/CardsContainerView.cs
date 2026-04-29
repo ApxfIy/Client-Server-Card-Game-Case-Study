@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 
@@ -28,10 +29,35 @@ namespace WarGame.Client.Views
                           });
         }
 
+        public void AddCardImmediate(CardView cardView)
+        {
+            cardView.transform.SetParent(container);
+            cardView.transform.localPosition = Vector3.zero;
+            _cards.Add(cardView);
+            cardView.OnClick += OnCardClick;
+        }
+
         public bool RemoveCard(CardView cardView)
         {
             cardView.OnClick -= OnCardClick;
             return _cards.Remove(cardView);
+        }
+
+        public CardView TakeTopCard()
+        {
+            if (_cards.Count == 0) return null;
+            var card = _cards[_cards.Count - 1];
+            RemoveCard(card);
+            return card;
+        }
+
+        public List<CardView> TakeAllCards()
+        {
+            var all = _cards.ToList();
+            _cards.Clear();
+            foreach (var card in all)
+                card.OnClick -= OnCardClick;
+            return all;
         }
 
         private void OnCardClick(CardView cardView)

@@ -1,5 +1,6 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using UnityEngine;
+using WarGame.Shared;
 
 namespace WarGame.Client.Views
 {
@@ -13,43 +14,67 @@ namespace WarGame.Client.Views
         [SerializeField] private BattleTableView gameBattleArea;
         [SerializeField] private float dealCardAnimationDuration = 0.2f;
 
-        public CardDeck Deck => deck;
-        public CardsContainerView PlayerHand => playerHand;
-        public CardsContainerView OpponentHand => opponentHand;
-        public CardsContainerView PlayerCapturedCards => playerCapturedCards;
-        public CardsContainerView OpponentCapturedCards => opponentCapturedCards;
-        public BattleTableView GameBattleArea => gameBattleArea;
+        public CardDeck Deck                              => deck;
+        public CardsContainerView PlayerHand              => playerHand;
+        public CardsContainerView OpponentHand            => opponentHand;
+        public CardsContainerView PlayerCapturedCards     => playerCapturedCards;
+        public CardsContainerView OpponentCapturedCards   => opponentCapturedCards;
+        public BattleTableView GameBattleArea             => gameBattleArea;
 
-        public Tween DealCardToPlayer() => DealCardTo(PlayerHand);
-        public Tween DealCardToOpponent() => DealCardTo(OpponentHand);
-        public Tween AddCapturedCardToPlayer(CardView cardView) => PlayerCapturedCards.AddCard(cardView, dealCardAnimationDuration);
-        public Tween AddCapturedCardToOpponent(CardView cardView) => OpponentCapturedCards.AddCard(cardView, dealCardAnimationDuration);
+        public Tween DealCardToPlayer()   => DealCardTo(playerHand);
+        public Tween DealCardToOpponent() => DealCardTo(opponentHand);
 
-        public Tween DealCardTo(CardsContainerView hand)
-        {
-            if (Deck.IsEmpty)
-            {
-                // throw?
-                return DOTween.Sequence();
-            }
-
-            var card = Deck.GetCard();
-            return hand.AddCard(card, dealCardAnimationDuration);
-        }
-
-        public Tween DealCardsToPlayers()
+        // Animates dealing playerCount cards to the player and opponentCount to the opponent,
+        // interleaving them one pair at a time (matching the visual deal rhythm).
+        public Tween DealCardsToPlayers(int playerCount, int opponentCount)
         {
             var sequence = DOTween.Sequence();
-
-            while (deck.IsEmpty == false)
+            int total = Mathf.Max(playerCount, opponentCount);
+            for (int i = 0; i < total; i++)
             {
-                var internalSequence = DOTween.Sequence();
-                internalSequence.Join(DealCardToPlayer());
-                internalSequence.Join(DealCardToOpponent());
-                sequence.Append(internalSequence);
+                var inner = DOTween.Sequence();
+                if (i < playerCount)   inner.Join(DealCardToPlayer());
+                if (i < opponentCount) inner.Join(DealCardToOpponent());
+                sequence.Append(inner);
             }
-            
             return sequence;
+        }
+
+        // Instantly restores visual state from a server-provided snapshot (no animation).
+        // Cards are placed face-down (unknown rank) except for revealed war slot cards.
+        public void RestoreFromState(StartGameResponse state)
+        {
+            for (int i = 0; i < state.PlayerHandCount;        i++) playerHand.AddCardImmediate(deck.GetCard());
+            for (int i = 0; i < state.OpponentHandCount;      i++) opponentHand.AddCardImmediate(deck.GetCard());
+            for (int i = 0; i < state.PlayerCapturedCount;    i++) playerCapturedCards.AddCardImmediate(deck.GetCard());
+            for (int i = 0; i < state.OpponentCapturedCount;  i++) opponentCapturedCards.AddCardImmediate(deck.GetCard());
+
+            if (!state.IsWarActive) return;
+
+            for (int i = 0; i < state.WarFaceDownCount; i++)
+                gameBattleArea.AddCardToWarSlotImmediate(deck.GetCard());
+
+            foreach (var rank in state.PlayerSlotRanks)
+            {
+                var card = deck.GetCard();
+                card.Initialize(rank, true);
+                gameBattleArea.AddCardToPlayerSlotImmediate(card);
+            }
+
+            foreach (var rank in state.OpponentSlotRanks)
+            {
+                var card = deck.GetCard();
+                card.Initialize(rank, true);
+                gameBattleArea.AddCardToOpponentSlotImmediate(card);
+            }
+        }
+
+        private Tween DealCardTo(CardsContainerView hand)
+        {
+            if (deck.IsEmpty)
+                return DOTween.Sequence();
+
+            return hand.AddCard(deck.GetCard(), dealCardAnimationDuration);
         }
     }
 }

@@ -18,14 +18,23 @@ namespace WarGame.Client.Views
         [SerializeField] private float animationDuration = 0.2f;
 
         public event Action<CardView> OnClick;
-        public CardRank Rank { get; private set; }
+
+        // Null when the card is face-down and its rank is unknown to the client
+        public CardRank? Rank { get; private set; }
         public bool IsFaceUp { get; private set; }
 
-        public void Initialize(CardRank rank, bool faceUp)
+        public void Initialize(CardRank? rank, bool faceUp)
         {
             Rank = rank;
             IsFaceUp = faceUp;
             ApplyVisuals(faceUp, rank);
+        }
+
+        // Reveals the card with a rank received from the server
+        public Tween Reveal(CardRank rank)
+        {
+            Rank = rank;
+            return FaceUp();
         }
 
         [ContextMenu("FaceUp")]
@@ -35,9 +44,9 @@ namespace WarGame.Client.Views
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                   .Append(root.DOScaleX(0f, animationDuration).SetEase(Ease.InQuad))
+                   .Append(root.DOScaleX(0f, animationDuration))
                    .AppendCallback(() => ApplyVisuals(true, Rank))
-                   .Append(root.DOScaleX(1f, animationDuration).SetEase(Ease.OutQuad))
+                   .Append(root.DOScaleX(1f, animationDuration))
                    .OnStart(() => IsFaceUp = true);
         }
 
@@ -48,23 +57,22 @@ namespace WarGame.Client.Views
                 return DOTween.Sequence();
 
             return DOTween.Sequence()
-                   .Append(root.DOScaleX(0f, animationDuration).SetEase(Ease.InQuad))
+                   .Append(root.DOScaleX(0f, animationDuration))
                    .AppendCallback(() => ApplyVisuals(false, Rank))
-                   .Append(root.DOScaleX(1f, animationDuration).SetEase(Ease.OutQuad))
+                   .Append(root.DOScaleX(1f, animationDuration))
                    .OnStart(() => IsFaceUp = false);
         }
 
-        private void ApplyVisuals(bool faceUp, CardRank rank)
+        private void ApplyVisuals(bool faceUp, CardRank? rank)
         {
-            rankText.enabled = faceUp;
-            rankText.text = rank.RankToString();
-            background.color = faceUp ? faceUpColor  : faceDownColor;
+            rankText.enabled = faceUp && rank.HasValue;
+            rankText.text    = rank.HasValue ? rank.Value.RankToString() : string.Empty;
+            background.color = faceUp ? faceUpColor : faceDownColor;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             OnClick?.Invoke(this);
-            Debug.Log($"Card {Rank} clicked", this);
         }
     }
 }

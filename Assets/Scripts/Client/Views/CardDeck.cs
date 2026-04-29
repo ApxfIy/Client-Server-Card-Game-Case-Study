@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using WarGame.Shared;
 
 namespace WarGame.Client.Views
 {
@@ -16,13 +14,14 @@ namespace WarGame.Client.Views
 
         private readonly List<CardView> _cards = new();
 
-        public void Initialize(IEnumerable<CardRank> cards)
+        // Creates count face-down cards with unknown rank (rank is set by the server on reveal)
+        public void Initialize(int count)
         {
-            foreach (var cardRank in cards)
+            for (int i = 0; i < count; i++)
             {
-                var cardView = Instantiate(cardPrefab, cardParent);
-                cardView.Initialize(cardRank, false);
-                _cards.Add(cardView);
+                var card = Instantiate(cardPrefab, cardParent);
+                card.Initialize(null, false);
+                _cards.Add(card);
             }
         }
 
@@ -30,16 +29,11 @@ namespace WarGame.Client.Views
         {
             if (IsEmpty)
                 throw new Exception("Card Deck is empty");
-            
-            var topCard = _cards.Last();
+
+            var topCard = _cards[_cards.Count - 1];
             topCard.transform.SetParent(null);
             _cards.RemoveAt(_cards.Count - 1);
             return topCard;
-        }
-
-        public void Shuffle()
-        {
-            _cards.Shuffle();
         }
     }
 }

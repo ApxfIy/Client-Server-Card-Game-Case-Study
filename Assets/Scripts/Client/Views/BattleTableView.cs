@@ -11,12 +11,25 @@ namespace WarGame.Client.Views
         [SerializeField] private CardsContainerView warCardsContainer;
         [SerializeField] private float animationDuration = 0.5f;
 
-        public IReadOnlyList<CardView> PlayerSlotCards => playerSlot.Cards;
+        public IReadOnlyList<CardView> PlayerSlotCards   => playerSlot.Cards;
         public IReadOnlyList<CardView> OpponentSlotCards => opponentSlot.Cards;
-        public IReadOnlyList<CardView> WarSlotCards => warCardsContainer.Cards;
+        public IReadOnlyList<CardView> WarSlotCards      => warCardsContainer.Cards;
 
-        public Tween AddCardToPlayerSlot(CardView cardView) => playerSlot.AddCard(cardView, animationDuration);
-        public Tween AddCardToOpponentSlot(CardView cardView) => opponentSlot.AddCard(cardView, animationDuration);
-        public Tween AddCardToWarSlot(CardView cardView) => warCardsContainer.AddCard(cardView, animationDuration);
+        public Tween AddCardToPlayerSlot(CardView card)   => playerSlot.AddCard(card, animationDuration);
+        public Tween AddCardToOpponentSlot(CardView card) => opponentSlot.AddCard(card, animationDuration);
+        public Tween AddCardToWarSlot(CardView card)      => warCardsContainer.AddCard(card, animationDuration);
+
+        public void AddCardToPlayerSlotImmediate(CardView card)   => playerSlot.AddCardImmediate(card);
+        public void AddCardToOpponentSlotImmediate(CardView card) => opponentSlot.AddCardImmediate(card);
+        public void AddCardToWarSlotImmediate(CardView card)      => warCardsContainer.AddCardImmediate(card);
+
+        public List<CardView> TakeAllCards()
+        {
+            var all = new List<CardView>();
+            all.AddRange(playerSlot.TakeAllCards());
+            all.AddRange(opponentSlot.TakeAllCards());
+            all.AddRange(warCardsContainer.TakeAllCards());
+            return all;
+        }
     }
 }
