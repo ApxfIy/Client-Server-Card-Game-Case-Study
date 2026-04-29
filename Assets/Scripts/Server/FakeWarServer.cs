@@ -285,15 +285,16 @@ namespace WarGame.Server
 
         private void RestoreState(SavedGameState s)
         {
-            _playerHand       = new List<CardRank>(s.PlayerHand       ?? Array.Empty<CardRank>());
-            _opponentHand     = new List<CardRank>(s.OpponentHand     ?? Array.Empty<CardRank>());
-            _playerCaptured   = new List<CardRank>(s.PlayerCaptured   ?? Array.Empty<CardRank>());
-            _opponentCaptured = new List<CardRank>(s.OpponentCaptured ?? Array.Empty<CardRank>());
-            _warFaceDown      = new List<CardRank>(s.WarFaceDown      ?? Array.Empty<CardRank>());
-            _playerSlot       = new List<CardRank>(s.PlayerSlotRanks  ?? Array.Empty<CardRank>());
-            _opponentSlot     = new List<CardRank>(s.OpponentSlotRanks ?? Array.Empty<CardRank>());
+            _playerHand       = new List<CardRank>(s.PlayerHand);
+            _opponentHand     = new List<CardRank>(s.OpponentHand);
+            _playerCaptured   = new List<CardRank>(s.PlayerCaptured);
+            _opponentCaptured = new List<CardRank>(s.OpponentCaptured);
+            _warFaceDown      = new List<CardRank>(s.WarFaceDown);
+            _playerSlot       = new List<CardRank>(s.PlayerSlotRanks);
+            _opponentSlot     = new List<CardRank>(s.OpponentSlotRanks);
             _isWarActive      = s.IsWarActive;
             _isGameOver       = s.IsGameOver;
+            _reshuffleCount   = s.ReshuffleCount;
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
@@ -310,10 +311,14 @@ namespace WarGame.Server
         // Returns true if a reshuffle occurred.
         private bool EnsureCards(List<CardRank> hand, List<CardRank> captured, int needed)
         {
-            if (hand.Count >= needed || captured.Count == 0) return false;
+            if (hand.Count >= needed || captured.Count == 0) 
+                return false;
+
             hand.AddRange(captured);
             captured.Clear();
+
             _dealStrategy.Shuffle(hand, ++_reshuffleCount);
+
             return true;
         }
 
@@ -346,7 +351,8 @@ namespace WarGame.Server
                 WarFaceDown       = _warFaceDown.ToArray(),
                 PlayerSlotRanks   = _playerSlot.ToArray(),
                 OpponentSlotRanks = _opponentSlot.ToArray(),
-                IsGameOver        = _isGameOver
+                IsGameOver        = _isGameOver,
+                ReshuffleCount    = _reshuffleCount
             };
             try
             {

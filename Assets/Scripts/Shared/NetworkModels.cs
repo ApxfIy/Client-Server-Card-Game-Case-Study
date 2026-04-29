@@ -5,6 +5,7 @@ namespace WarGame.Shared
         public ResponseStatus Status;
         public string ErrorMessage;
         public bool IsRestoredGame;
+        public int ReshuffleCount;
 
         public int PlayerHandCount;
         public int OpponentHandCount;

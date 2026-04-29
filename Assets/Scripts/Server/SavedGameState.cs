@@ -15,5 +15,6 @@ namespace WarGame.Server
         public CardRank[] PlayerSlotRanks   = Array.Empty<CardRank>();
         public CardRank[] OpponentSlotRanks = Array.Empty<CardRank>();
         public bool IsGameOver;
+        public int ReshuffleCount;
     }
 }
