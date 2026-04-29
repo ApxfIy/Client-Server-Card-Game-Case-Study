@@ -1585,7 +1585,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   board: {fileID: 753157478}
   animationConfig: {fileID: 11400000, guid: adbb9da155772f642ac6ab7dea32f87c, type: 2}
-  debugPreset: 3
+  debugPreset: 0
 --- !u!4 &1191141609
 Transform:
   m_ObjectHideFlags: 0
