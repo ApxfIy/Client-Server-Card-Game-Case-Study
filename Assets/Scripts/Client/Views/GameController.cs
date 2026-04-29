@@ -68,9 +68,9 @@ namespace WarGame.Client.Views
             {
                 var warSeq = DOTween.Sequence();
                 for (int i = 0; i < response.PlayerWarCardsPlayed; i++)
-                    warSeq.Join(_board.GameBattleArea.AddCardToWarSlot(_board.PlayerHand.TakeTopCard()));
+                    warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.PlayerHand.TakeTopCard()));
                 for (int i = 0; i < response.OpponentWarCardsPlayed; i++)
-                    warSeq.Join(_board.GameBattleArea.AddCardToWarSlot(_board.OpponentHand.TakeTopCard()));
+                    warSeq.Append(_board.GameBattleArea.AddCardToWarSlot(_board.OpponentHand.TakeTopCard()));
                 await warSeq.ToUniTask();
             }
 
