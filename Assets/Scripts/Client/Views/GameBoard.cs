@@ -32,8 +32,6 @@ namespace WarGame.Client.Views
             return DealCardTo(opponentHand);
         }
 
-        // Animates dealing playerCount cards to the player and opponentCount to the opponent,
-        // interleaving them one pair at a time (matching the visual deal rhythm).
         public Tween DealCardsToPlayers(int playerCount, int opponentCount)
         {
             var sequence = DOTween.Sequence();
@@ -55,9 +53,15 @@ namespace WarGame.Client.Views
             return sequence;
         }
 
-        // Instantly restores visual state from a server-provided snapshot (no animation).
-        // Cards are placed face-down (unknown rank) except for revealed war slot cards.
         public void RestoreFromState(StartGameResponse state)
+        {
+            RestoreHandsAndCapturedPiles(state);
+
+            if (state.IsWarActive)
+                RestoreWarBattleArea(state);
+        }
+
+        private void RestoreHandsAndCapturedPiles(StartGameResponse state)
         {
             for (var i = 0; i < state.PlayerHandCount; i++)
                 playerHand.AddCardImmediate(deck.GetCard());
@@ -70,9 +74,10 @@ namespace WarGame.Client.Views
 
             for (var i = 0; i < state.OpponentCapturedCount; i++)
                 opponentCapturedCards.AddCardImmediate(deck.GetCard());
+        }
 
-            if (!state.IsWarActive) return;
-
+        private void RestoreWarBattleArea(StartGameResponse state)
+        {
             for (var i = 0; i < state.WarFaceDownCount; i++)
                 gameBattleArea.AddCardToWarSlotImmediate(deck.GetCard());
 

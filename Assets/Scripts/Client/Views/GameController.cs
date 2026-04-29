@@ -66,7 +66,6 @@ namespace WarGame.Client.Views
                 return;
             }
 
-            // Game ended before any cards could be played (e.g. not enough cards for war)
             if (response.EarlyGameOver)
             {
                 EndGame(response.FinalResult);
@@ -77,7 +76,6 @@ namespace WarGame.Client.Views
             await MoveCardsToWarPosition(response);
             await CompareCards(response);
 
-            // Tie: server will handle war on the next round
             if (response.RoundResult == CompareResult.Tie)
             {
                 FinishRound();
@@ -160,7 +158,6 @@ namespace WarGame.Client.Views
             return collectSeq.ToUniTask();
         }
 
-        // Instantly moves all cards from one container to another (for captured → hand reshuffle)
         private Sequence AnimateReshuffle(CardsContainerView from, CardsContainerView to)
         {
             var sequence = DOTween.Sequence();
