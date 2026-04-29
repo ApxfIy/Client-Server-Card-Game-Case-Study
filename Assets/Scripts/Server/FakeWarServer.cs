@@ -56,6 +56,21 @@ namespace WarGame.Server
                 InitNewGame();
             }
 
+            if (isRestored)
+            {
+                string war = _isWarActive
+                    ? $" | war active — pot: {_warFaceDown.Count} cards, slots: {_playerSlot.Count} each"
+                    : " | no war pending";
+                GameLogger.Server(
+                    $"Restored from save — Player hand: {_playerHand.Count} captured: {_playerCaptured.Count} | " +
+                    $"Opp hand: {_opponentHand.Count} captured: {_opponentCaptured.Count}{war}");
+            }
+            else
+            {
+                GameLogger.Server(
+                    $"New game — Player: {_playerHand.Count} cards | Opponent: {_opponentHand.Count} cards");
+            }
+
             return new StartGameResponse
             {
                 Status                = ResponseStatus.Success,
@@ -93,14 +108,22 @@ namespace WarGame.Server
                     else if (pTotal < 4)           earlyResult = GameResult.OpponentWins;
                     else                           earlyResult = GameResult.PlayerWins;
 
+                    GameLogger.Server(
+                        $"Cannot continue war — Player total: {pTotal}, Opponent total: {oTotal} " +
+                        $"→ {earlyResult} (early termination)");
+
                     _isGameOver = true;
                     SaveState();
                     return BuildGameOverResponse(earlyResult, earlyGameOver: true);
                 }
 
-                // Reshuffle upfront so we always have enough cards in hand
                 pReshuffled = EnsureCards(_playerHand, _playerCaptured, needed: 4);
                 oReshuffled = EnsureCards(_opponentHand, _opponentCaptured, needed: 4);
+
+                if (pReshuffled)
+                    GameLogger.Server($"Player reshuffled captured pile into hand ({_playerHand.Count} cards)");
+                if (oReshuffled)
+                    GameLogger.Server($"Opponent reshuffled captured pile into hand ({_opponentHand.Count} cards)");
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -109,11 +132,18 @@ namespace WarGame.Server
                 }
                 playerWarCards   = 3;
                 opponentWarCards = 3;
+
+                GameLogger.Server($"War cards dealt — 3 face-down per side (pot: {_warFaceDown.Count} cards total)");
             }
             else
             {
                 pReshuffled = EnsureCards(_playerHand, _playerCaptured, needed: 1);
                 oReshuffled = EnsureCards(_opponentHand, _opponentCaptured, needed: 1);
+
+                if (pReshuffled)
+                    GameLogger.Server($"Player reshuffled captured pile into hand ({_playerHand.Count} cards)");
+                if (oReshuffled)
+                    GameLogger.Server($"Opponent reshuffled captured pile into hand ({_opponentHand.Count} cards)");
             }
 
             var pCard = TakeTop(_playerHand);
@@ -123,11 +153,20 @@ namespace WarGame.Server
                        : pCard < oCard ? CompareResult.OpponentWins
                        :                 CompareResult.Tie;
 
+            GameLogger.Server(
+                $"Compare: Player {pCard.RankToString()} vs Opponent {oCard.RankToString()} → {result}");
+
             if (result == CompareResult.Tie)
             {
                 _playerSlot.Add(pCard);
                 _opponentSlot.Add(oCard);
                 _isWarActive = true;
+
+                GameLogger.Server(
+                    $"Tie — slot size: {_playerSlot.Count} card(s) each | " +
+                    $"Player hand: {_playerHand.Count} captured: {_playerCaptured.Count} | " +
+                    $"Opp hand: {_opponentHand.Count} captured: {_opponentCaptured.Count}");
+
                 SaveState();
                 return new PlayRoundResponse
                 {
@@ -151,6 +190,7 @@ namespace WarGame.Server
             var winnerCaptured = result == CompareResult.PlayerWins
                 ? _playerCaptured : _opponentCaptured;
 
+            int potSize = _warFaceDown.Count + _playerSlot.Count + _opponentSlot.Count + 2;
             winnerCaptured.AddRange(_warFaceDown);
             winnerCaptured.AddRange(_playerSlot);
             winnerCaptured.Add(pCard);
@@ -172,6 +212,15 @@ namespace WarGame.Server
                 else if (pOut)   finalResult = GameResult.OpponentWins;
                 else             finalResult = GameResult.PlayerWins;
             }
+
+            string winnerName = result == CompareResult.PlayerWins ? "Player" : "Opponent";
+            GameLogger.Server(
+                $"{winnerName} wins the round (+{potSize} cards) | " +
+                $"Player hand: {_playerHand.Count} captured: {_playerCaptured.Count} | " +
+                $"Opp hand: {_opponentHand.Count} captured: {_opponentCaptured.Count}");
+
+            if (_isGameOver)
+                GameLogger.Server($"Game over — {finalResult}");
 
             SaveState();
 
@@ -290,6 +339,7 @@ namespace WarGame.Server
             try
             {
                 File.WriteAllText(SavePath, JsonUtility.ToJson(state));
+                GameLogger.Server("State saved to disk");
             }
             catch (Exception e)
             {
