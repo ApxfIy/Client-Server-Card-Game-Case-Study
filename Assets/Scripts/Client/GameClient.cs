@@ -13,103 +13,71 @@ namespace WarGame.Client
 
         public event Action<string> OnNetworkStatusChanged;
 
-        public GameClient(FakeWarServer server)
-        {
-            _server = server;
-        }
+        public GameClient(FakeWarServer server) => _server = server;
 
-        public async UniTask<StartGameResponse> StartGameAsync()
+        public UniTask<StartGameResponse> StartGameAsync() =>
+            ExecuteWithRetry("StartGame", _server.StartGameAsync, LogStartGameResponse,
+                (status, msg) => new StartGameResponse { Status = status, ErrorMessage = msg });
+
+        public UniTask<PlayRoundResponse> PlayRoundAsync() =>
+            ExecuteWithRetry("PlayRound", _server.PlayRoundAsync, LogPlayRoundResponse,
+                (status, msg) => new PlayRoundResponse { Status = status, ErrorMessage = msg });
+
+        private async UniTask<T> ExecuteWithRetry<T>(
+            string tag,
+            Func<UniTask<T>> action,
+            Action<T> onSuccess,
+            Func<ResponseStatus, string, T> createError)
         {
             for (int attempt = 0; attempt < MaxRetries; attempt++)
             {
                 GameLogger.Client(attempt == 0
-                    ? "→ StartGame"
-                    : $"→ StartGame retry ({attempt}/{MaxRetries - 1})");
+                    ? $"→ {tag}"
+                    : $"→ {tag} retry ({attempt}/{MaxRetries - 1})");
 
                 if (attempt > 0)
                     OnNetworkStatusChanged?.Invoke($"Retrying... ({attempt}/{MaxRetries - 1})");
 
                 try
                 {
-                    var response = await _server.StartGameAsync();
-
+                    var response = await action();
                     if (attempt > 0) OnNetworkStatusChanged?.Invoke(string.Empty);
-
-                    string kind = response.IsRestoredGame ? "restored" : "new game";
-                    string war = response.IsWarActive
-                        ? $" | war active (pot: {response.WarFaceDownCount}, slots: {response.PlayerSlotRanks?.Length ?? 0} each)"
-                        : "";
-                    GameLogger.Client(
-                        $"← StartGame [{kind}]: " +
-                        $"Player hand: {response.PlayerHandCount} captured: {response.PlayerCapturedCount} | " +
-                        $"Opp hand: {response.OpponentHandCount} captured: {response.OpponentCapturedCount}{war}");
-
+                    onSuccess(response);
                     return response;
                 }
                 catch (TimeoutException ex)
                 {
-                    GameLogger.Client($"← StartGame: TIMEOUT — {ex.Message}");
-                    return new StartGameResponse { Status = ResponseStatus.Timeout, ErrorMessage = ex.Message };
+                    GameLogger.Client($"← {tag}: TIMEOUT — {ex.Message}");
+                    return createError(ResponseStatus.Timeout, ex.Message);
                 }
                 catch (Exception ex)
                 {
                     bool isLast = attempt == MaxRetries - 1;
                     GameLogger.Client(isLast
-                        ? $"← StartGame: NETWORK ERROR — giving up after {MaxRetries} attempts ({ex.Message})"
-                        : $"← StartGame: network error (attempt {attempt + 1}/{MaxRetries}), retrying in {RetryDelayMs}ms...");
+                        ? $"← {tag}: NETWORK ERROR — giving up after {MaxRetries} attempts ({ex.Message})"
+                        : $"← {tag}: network error (attempt {attempt + 1}/{MaxRetries}), retrying in {RetryDelayMs}ms...");
 
                     if (isLast)
-                        return new StartGameResponse { Status = ResponseStatus.NetworkError, ErrorMessage = "Connection failed" };
+                        return createError(ResponseStatus.NetworkError, "Connection failed");
 
                     await UniTask.Delay(RetryDelayMs);
                 }
             }
 
-            GameLogger.Client($"← StartGame: FAILED — max retries exceeded");
-            return new StartGameResponse { Status = ResponseStatus.NetworkError, ErrorMessage = "Max retries exceeded" };
+            GameLogger.Client($"← {tag}: FAILED — max retries exceeded");
+            return createError(ResponseStatus.NetworkError, "Max retries exceeded");
         }
 
-        public async UniTask<PlayRoundResponse> PlayRoundAsync()
+        private static void LogStartGameResponse(StartGameResponse r)
         {
-            for (int attempt = 0; attempt < MaxRetries; attempt++)
-            {
-                GameLogger.Client(attempt == 0
-                    ? "→ PlayRound"
-                    : $"→ PlayRound retry ({attempt}/{MaxRetries - 1})");
-
-                if (attempt > 0)
-                    OnNetworkStatusChanged?.Invoke($"Retrying... ({attempt}/{MaxRetries - 1})");
-
-                try
-                {
-                    var response = await _server.PlayRoundAsync();
-
-                    if (attempt > 0) OnNetworkStatusChanged?.Invoke(string.Empty);
-
-                    LogPlayRoundResponse(response);
-                    return response;
-                }
-                catch (TimeoutException ex)
-                {
-                    GameLogger.Client($"← PlayRound: TIMEOUT — {ex.Message}");
-                    return new PlayRoundResponse { Status = ResponseStatus.Timeout, ErrorMessage = ex.Message };
-                }
-                catch (Exception ex)
-                {
-                    bool isLast = attempt == MaxRetries - 1;
-                    GameLogger.Client(isLast
-                        ? $"← PlayRound: NETWORK ERROR — giving up after {MaxRetries} attempts ({ex.Message})"
-                        : $"← PlayRound: network error (attempt {attempt + 1}/{MaxRetries}), retrying in {RetryDelayMs}ms...");
-
-                    if (isLast)
-                        return new PlayRoundResponse { Status = ResponseStatus.NetworkError, ErrorMessage = "Connection failed" };
-
-                    await UniTask.Delay(RetryDelayMs);
-                }
-            }
-
-            GameLogger.Client($"← PlayRound: FAILED — max retries exceeded");
-            return new PlayRoundResponse { Status = ResponseStatus.NetworkError, ErrorMessage = "Max retries exceeded" };
+            string kind = r.IsRestoredGame ? "restored" : "new game";
+            string war  = r.IsWarActive
+                ? $" | war active (pot: {r.WarFaceDownCount}, slots: {r.PlayerSlotRanks?.Length ?? 0} each)"
+                : "";
+            GameLogger.Client(
+                $"← StartGame [{kind}]: " +
+                $"Player hand: {r.PlayerHandCount} captured: {r.PlayerCapturedCount} | " +
+                $"Opp hand: {r.OpponentHandCount} captured: {r.OpponentCapturedCount}{war}");
         }
 
         private static void LogPlayRoundResponse(PlayRoundResponse r)
@@ -120,13 +88,10 @@ namespace WarGame.Client
                 return;
             }
 
-            string war = r.PlayerWarCardsPlayed > 0
-                ? $" | war: +{r.PlayerWarCardsPlayed} face-down each"
-                : "";
+            string war      = r.PlayerWarCardsPlayed > 0 ? $" | war: +{r.PlayerWarCardsPlayed} face-down each" : "";
             string reshuffle = BuildReshuffleNote(r.PlayerHandReshuffled, r.OpponentHandReshuffled);
-            string counts =
-                $"Player hand: {r.PlayerHandCount} captured: {r.PlayerCapturedCount} | " +
-                $"Opp hand: {r.OpponentHandCount} captured: {r.OpponentCapturedCount}";
+            string counts   = $"Player hand: {r.PlayerHandCount} captured: {r.PlayerCapturedCount} | " +
+                              $"Opp hand: {r.OpponentHandCount} captured: {r.OpponentCapturedCount}";
             string gameOver = r.IsGameOver ? $" | GAME OVER — {r.FinalResult}" : "";
 
             GameLogger.Client(
