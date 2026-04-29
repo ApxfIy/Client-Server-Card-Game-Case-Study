@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using WarGame.Client.Animation;
 using WarGame.Shared;
 
@@ -14,6 +15,7 @@ namespace WarGame.Client.Views
         private readonly InputManager _inputManager;
 
         private bool _isProcessingRound;
+        private bool _isGameFinished;
 
         public GameController(GameBoard board, GameClient client, InputManager inputManager)
         {
@@ -34,6 +36,15 @@ namespace WarGame.Client.Views
 
         private void OnAnyInput()
         {
+            // Fastest way to restart the game
+            // TODO write a proper restart logic
+            if (_isGameFinished)
+            {
+                Debug.Log($"Restarting the game");
+                SceneManager.LoadScene(0);
+                return;
+            }
+
             if (_isProcessingRound) return;
 
             PlayRoundAsync().Forget();
@@ -161,6 +172,8 @@ namespace WarGame.Client.Views
         {
             Debug.Log($"Game over: {result}");
             // TODO: show game-over UI
+            _isGameFinished = true;
+            _inputManager.EnableInput();
         }
     }
 }
