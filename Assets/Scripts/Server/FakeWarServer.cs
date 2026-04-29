@@ -276,7 +276,7 @@ namespace WarGame.Server
             }
             catch (Exception e)
             {
-                /* best-effort */
+                GameLogger.Server("Failed to delete save file. Exception: " + e);
             }
         }
 
