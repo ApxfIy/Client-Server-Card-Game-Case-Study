@@ -1,5 +1,6 @@
 using UnityEngine;
 using WarGame.Client.Animation;
+using WarGame.Server;
 using WarGame.Shared;
 
 namespace WarGame.Client.Views
@@ -12,7 +13,8 @@ namespace WarGame.Client.Views
 
         private async void Awake()
         {
-            var client = new GameClient();
+            var server = new FakeWarServer();
+            var client = new GameClient(server);
             var state = await client.StartGameAsync();
 
             if (state.Status != ResponseStatus.Success)

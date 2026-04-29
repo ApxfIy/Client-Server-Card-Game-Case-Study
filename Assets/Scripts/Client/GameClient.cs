@@ -7,11 +7,16 @@ namespace WarGame.Client
 {
     public class GameClient
     {
-        private readonly FakeWarServer _server = new();
+        private readonly FakeWarServer _server;
         private const int MaxRetries   = 3;
         private const int RetryDelayMs = 600;
 
         public event Action<string> OnNetworkStatusChanged;
+
+        public GameClient(FakeWarServer server)
+        {
+            _server = server;
+        }
 
         public async UniTask<StartGameResponse> StartGameAsync()
         {
