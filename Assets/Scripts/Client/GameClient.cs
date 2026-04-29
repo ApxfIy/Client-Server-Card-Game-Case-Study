@@ -68,35 +68,35 @@ namespace WarGame.Client
             return createError(ResponseStatus.NetworkError, "Max retries exceeded");
         }
 
-        private static void LogStartGameResponse(StartGameResponse r)
+        private static void LogStartGameResponse(StartGameResponse response)
         {
-            string kind = r.IsRestoredGame ? "restored" : "new game";
-            string war  = r.IsWarActive
-                ? $" | war active (pot: {r.WarFaceDownCount}, slots: {r.PlayerSlotRanks?.Length ?? 0} each)"
+            string kind = response.IsRestoredGame ? "restored" : "new game";
+            string war  = response.IsWarActive
+                ? $" | war active (pot: {response.WarFaceDownCount}, slots: {response.PlayerSlotRanks?.Length ?? 0} each)"
                 : "";
             GameLogger.Client(
                 $"← StartGame [{kind}]: " +
-                $"Player hand: {r.PlayerHandCount} captured: {r.PlayerCapturedCount} | " +
-                $"Opp hand: {r.OpponentHandCount} captured: {r.OpponentCapturedCount}{war}");
+                $"Player hand: {response.PlayerHandCount} captured: {response.PlayerCapturedCount} | " +
+                $"Opp hand: {response.OpponentHandCount} captured: {response.OpponentCapturedCount}{war}");
         }
 
-        private static void LogPlayRoundResponse(PlayRoundResponse r)
+        private static void LogPlayRoundResponse(PlayRoundResponse response)
         {
-            if (r.EarlyGameOver)
+            if (response.EarlyGameOver)
             {
-                GameLogger.Client($"← PlayRound: GAME OVER (early, no cards played) — {r.FinalResult}");
+                GameLogger.Client($"← PlayRound: GAME OVER (early, no cards played) — {response.FinalResult}");
                 return;
             }
 
-            string war      = r.PlayerWarCardsPlayed > 0 ? $" | war: +{r.PlayerWarCardsPlayed} face-down each" : "";
-            string reshuffle = BuildReshuffleNote(r.PlayerHandReshuffled, r.OpponentHandReshuffled);
-            string counts   = $"Player hand: {r.PlayerHandCount} captured: {r.PlayerCapturedCount} | " +
-                              $"Opp hand: {r.OpponentHandCount} captured: {r.OpponentCapturedCount}";
-            string gameOver = r.IsGameOver ? $" | GAME OVER — {r.FinalResult}" : "";
+            string war      = response.PlayerWarCardsPlayed > 0 ? $" | war: +{response.PlayerWarCardsPlayed} face-down each" : "";
+            string reshuffle = BuildReshuffleNote(response.PlayerHandReshuffled, response.OpponentHandReshuffled);
+            string counts   = $"Player hand: {response.PlayerHandCount} captured: {response.PlayerCapturedCount} | " +
+                              $"Opp hand: {response.OpponentHandCount} captured: {response.OpponentCapturedCount}";
+            string gameOver = response.IsGameOver ? $" | GAME OVER — {response.FinalResult}" : "";
 
             GameLogger.Client(
-                $"← PlayRound [{r.RoundResult}]: " +
-                $"Player {r.PlayerCard.RankToString()} vs Opp {r.OpponentCard.RankToString()}" +
+                $"← PlayRound [{response.RoundResult}]: " +
+                $"Player {response.PlayerCard.RankToString()} vs Opp {response.OpponentCard.RankToString()}" +
                 $"{war}{reshuffle} | {counts}{gameOver}");
         }
 
